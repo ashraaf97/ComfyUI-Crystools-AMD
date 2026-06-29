@@ -1,6 +1,8 @@
-# comfyui-crystools [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/crystian77) <a src="https://colab.research.google.com/assets/colab-badge.svg" href="https://colab.research.google.com/drive/1xiTiPmZkcIqNOsLQPO1UNCdJZqgK3U5k?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+# comfyui-crystools (AMD fork) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/crystian77) <a src="https://colab.research.google.com/assets/colab-badge.svg" href="https://colab.research.google.com/drive/1xiTiPmZkcIqNOsLQPO1UNCdJZqgK3U5k?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 
 **_🪛 A powerful set of tools for your belt when you work with ComfyUI 🪛_**
+
+> **AMD support:** This is a fork of [comfyui-crystools](https://github.com/crystian/comfyui-crystools) that adds **AMD GPU (ROCm/HIP) monitoring** on Linux via [amdsmi](https://github.com/ROCm/amd_smi), so AMD users get the same resources monitor (GPU utilization, VRAM, temperature) as NVIDIA users. NVIDIA (CUDA/pynvml) and Jetson (jtop) are still supported.
 
 With this suit, you can see the resources monitor, progress bar & time elapsed, metadata and compare between two images, compare between two JSONs, show any value to console/display, pipes, and more!
 This provides better nodes to load/save images, previews, etc, and see "hidden" data without loading a new workflow.
@@ -40,13 +42,15 @@ You can configure the refresh rate which resources to show:
 ![Monitors](./docs/monitor-settings.png)
 
 > **Notes:**
-> - The GPU data is only available when you use CUDA (only NVIDIA cards, sorry AMD users).
+> - The GPU data is available for NVIDIA (CUDA/pynvml), AMD (ROCm via amdsmi), and Jetson (jtop). AMD requires a ROCm install with `amdsmi` reachable (typically at `/opt/rocm/share/amd_smi`) and works on Linux.
 > - This extension needs ComfyUI 1915 (or higher).
 > - The cost of the monitor is low (0.1 to 0.5% of utilization), you can disable it from settings (`Refres rate` to `0`).
 > - Data comes from these libraries:
 >   - [psutil](https://pypi.org/project/psutil/)
 >   - [torch](https://pytorch.org/)
->   - [pynvml](https://pypi.org/project/pynvml/) (official NVIDIA library)
+>   - [pynvml](https://pypi.org/project/pynvml/) (official NVIDIA library, Windows/aarch64-excluded)
+>   - [amdsmi](https://github.com/ROCm/amd_smi) (AMD ROCm, bundled with the ROCm stack)
+>   - [jetson-stats](https://pypi.org/project/jetson-stats/) (NVIDIA Jetson, aarch64)
 
 
 ### Progress bar
@@ -516,6 +520,10 @@ You have predefined switches (string, latent, image, conditioning) but you can u
 
 ### Crystools
 
+### AMD fork
+- AMD GPU (ROCm/HIP) monitoring via `amdsmi`, with automatic fallback to pynvml/jtop. No separate `AMD` branch needed.
+- PyTorch VRAM readout now gracefully reports N/A when no GPU is detected instead of crashing.
+
 ### 1.27.0 (17/08/2025)
 - revert the lower case on name, cannot change on registry ¯\_(ツ)_/¯
 - zluda check removed, it is not necessary anymore
@@ -622,27 +630,28 @@ You have predefined switches (string, latent, image, conditioning) but you can u
 2. Clone this repo into `custom_nodes`:
     ```
     cd ComfyUI/custom_nodes
-    git clone https://github.com/crystian/comfyui-crystools.git
-    cd comfyui-crystools
+    git clone https://github.com/ashraaf97/ComfyUI-Crystools-AMD.git
+    cd ComfyUI-Crystools-AMD
     pip install -r requirements.txt
     ```
 3. Start up ComfyUI.
 
-#### For AMD users
-If you are an AMD user with Linux, you can try the AMD branch:
+#### For AMD users (Linux / ROCm)
+This fork adds AMD GPU monitoring out of the box, so AMD users on Linux no longer need the separate `AMD` branch used by the upstream project. Just install as above.
 
-**ATTENTION:** Don't install with the manager, you need to install manually:
+Requirements:
+- A working [ROCm](https://rocm.docs.amd.com/) install (so PyTorch can see your GPU via HIP/`cuda.is_available()`).
+- `amdsmi` reachable on the Python path. It ships with ROCm at `/opt/rocm/share/amd_smi`; this extension adds that path automatically at startup. If your ROCm layout differs, either:
+  - export `PYTHONPATH=/opt/rocm/share/amd_smi:$PYTHONPATH` before launching ComfyUI, or
+  - `pip install amdsmi` if you prefer the PyPI wheel where available.
 
-  ```
-  cd ComfyUI/custom_nodes
-  git clone -b AMD https://github.com/crystian/comfyui-crystools.git
-  cd comfyui-crystools
-  pip install -r requirements.txt
-  ```
+Once running, you should see `amdsmi (AMD ROCm) initialized. Found N GPU(s).` in the ComfyUI console and the GPU/VRAM/temperature monitors will populate just like on NVIDIA.
 
 ### Install from manager
 
 Search for `crystools` in the [manager](https://github.com/ltdrdata/ComfyUI-Manager.git) and install it.
+
+> **Note:** The manager install pulls the upstream NVIDIA-only build. For AMD support, use the GitHub install above with this fork (`ashraaf97/ComfyUI-Crystools-AMD`).
 
 ### Using on Google Colab
 
