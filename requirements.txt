@@ -2,7 +2,7 @@ deepdiff
 torch
 numpy
 Pillow
-pynvml; platform_machine != 'aarch64'
 py-cpuinfo
 piexif
+pynvml; platform_machine != 'aarch64' and platform_system == 'Windows'
 jetson-stats; platform_machine == 'aarch64'

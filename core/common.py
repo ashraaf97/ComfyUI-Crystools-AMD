@@ -66,11 +66,14 @@ def get_system_stats():
     ram_total = ram.total / (1024 ** 3)
     ram_stats = f"Used RAM: {ram_used:.2f} GB / Total RAM: {ram_total:.2f} GB"
 
-    # VRAM (with PyTorch)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vram_used = torch.cuda.memory_allocated(device) / (1024 ** 3)
-    vram_total = torch.cuda.get_device_properties(device).total_memory / (1024 ** 3)
-    vram_stats = f"Used VRAM: {vram_used:.2f} GB / Total VRAM: {vram_total:.2f} GB"
+    # VRAM (with PyTorch - works for both CUDA and ROCm/HIP)
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        vram_used = torch.cuda.memory_allocated(device) / (1024 ** 3)
+        vram_total = torch.cuda.get_device_properties(device).total_memory / (1024 ** 3)
+        vram_stats = f"Used VRAM: {vram_used:.2f} GB / Total VRAM: {vram_total:.2f} GB"
+    else:
+        vram_stats = "VRAM: N/A (no GPU detected by PyTorch)"
 
     # Hard Drive Space
     hard_drive = psutil.disk_usage("/")
